@@ -2,8 +2,10 @@
 import Link from "next/link";
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
+  const router = useRouter();
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -30,6 +32,7 @@ export default function SignupPage() {
       setErrorMessage(error.message);
     } else {
       setErrorMessage("");
+      router.push("/onboarding");
     }
   };
 
