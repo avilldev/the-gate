@@ -118,7 +118,7 @@ export default function OnboardingPage() {
       alert("Failed to save profile: " + error.message);
       setIsSubmitting(false);
     } else {
-      router.push("/");
+      router.push("/dashboard");
     }
   };
 

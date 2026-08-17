@@ -1,9 +1,25 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (session) {
+        router.push("/dashboard");
+      }
+    };
+
+    checkExistingSession();
+  }, [router]);
+
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -22,9 +38,7 @@ export default function LoginPage() {
     if (error) {
       setErrorMessage(error.message);
     } else {
-      setErrorMessage(
-        "Successful! (This is not an error, just temporary to show that your credentials are correct!)",
-      );
+      router.push("/dashboard");
     }
   };
 
