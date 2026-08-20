@@ -64,6 +64,16 @@ export default function DashboardPage() {
     setIsUpdating(false);
   };
 
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      alert("Error logging out: " + error.message);
+    } else {
+      router.push("/login");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -106,7 +116,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 flex-1">
             <span className="text-gray-700 text-2xl">Welcome Back</span>
             <h3 className="text-4xl font-bold text-gray-900 mb-4">
               {profile.username}
@@ -118,6 +128,21 @@ export default function DashboardPage() {
             <span className="font-semibold text-gray-900 mt-3">
               Contribution Points: {profile.contribution_points}
             </span>
+          </div>
+
+          <div className="flex flex-col gap-4 min-w-40">
+            <button
+              onClick={handleLogout}
+              className="w-full px-4 py-2 bg-red-50 text-red-600 rounded-md font-medium hover:bg-red-100 transition"
+            >
+              Log Out
+            </button>
+            <button
+              onClick={() => router.push("/change-password")}
+              className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded-md font-medium hover:bg-gray-300 transition"
+            >
+              Change Password
+            </button>
           </div>
         </div>
       </div>
