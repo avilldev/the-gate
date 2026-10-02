@@ -21,6 +21,8 @@ export default function UploadPage() {
   const [classNumber, setClassNumber] = useState("");
   const [notes, setNotes] = useState("");
 
+  const [isUploading, setIsUploading] = useState(false);
+
   useEffect(() => {
     const enforceAuth = async () => {
       const {
@@ -62,8 +64,74 @@ export default function UploadPage() {
       return;
     }
 
-    console.log("Ready to submit files:", files);
-    alert("UI wired up! Ready to connect to the database.");
+    setIsUploading(true);
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user)
+        throw new Error("Authentication error. Please log in again.");
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("school")
+        .eq("id", user.id)
+        .single();
+
+      if (profileError || !profile)
+        throw new Error("Could not retrieve your school information.");
+
+      const uploadedFileUrls: string[] = [];
+
+      for (const file of files) {
+        const fileExt = file.name.split(".").pop();
+        const safeFileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `${user.id}/${safeFileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("resources")
+          .upload(filePath, file);
+
+        if (uploadError)
+          throw new Error(
+            `Failed to upload ${file.name}: ${uploadError.message}`,
+          );
+
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("resources").getPublicUrl(filePath);
+
+        uploadedFileUrls.push(publicUrl);
+      }
+
+      const { error: dbError } = await supabase.from("uploads").insert({
+        uploader_id: user.id,
+        school: profile.school,
+        title,
+        subject,
+        grade,
+        stream,
+        language,
+        course_code: courseCode,
+        teacher,
+        academic_year: academicYear,
+        class_number: classNumber || null,
+        notes: notes || null,
+        file_urls: uploadedFileUrls,
+      });
+
+      if (dbError) throw new Error(`Database error:${dbError.message}`);
+
+      alert("Success! Your resrouces have been securely uploaded.");
+      window.location.href = "/dashboard";
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      alert(error.message);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   if (isCheckingAuth) {
@@ -156,6 +224,22 @@ export default function UploadPage() {
               />
             </div>
 
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700">
+                Description
+              </label>
+              <textarea
+                value={notes}
+                required
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={
+                  "For example:\n- What you had to do for the assignment\n- What the notes contain\n- What the evaluation was on\netc."
+                }
+                rows={5}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none"
+              />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-gray-700">
@@ -211,6 +295,7 @@ export default function UploadPage() {
                   <option value="Mixed">Mixed</option>
                   <option value="Open">Open</option>
                   <option value="Workplace">Workplace</option>
+                  <option value="Workplace">I am not sure...</option>
                 </select>
               </div>
 
@@ -247,6 +332,7 @@ export default function UploadPage() {
                 </label>
                 <input
                   type="text"
+                  placeholder="Mr./Ms. Full Name"
                   required
                   value={teacher}
                   onChange={(e) => setTeacher(e.target.value)}
@@ -294,26 +380,16 @@ export default function UploadPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
               />
             </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-gray-700">
-                Additional Notes
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Any extra context about these documents..."
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600 resize-none"
-              />
-            </div>
           </div>
 
           <button
             type="submit"
+            disabled={isUploading}
             className="w-full bg-blue-600 text-white fount-bold py-3 rounded-md hover:bg-blue-700 transition shadow-sm text-lg"
           >
-            Submit for Upload
+            {isUploading
+              ? "Uploading files, please wait..."
+              : "Submit for Upload"}
           </button>
         </form>
       </div>
