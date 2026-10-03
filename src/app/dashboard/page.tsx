@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -160,7 +161,7 @@ export default function DashboardPage() {
       </div>
 
       {isPopUpOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col">
             <div className="p-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
               <h3 className="text-xl font-bold text-gray-800">
@@ -200,11 +201,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {isUpdating && (
+            {/* {isUpdating && (
               <div className="p-3 bg-blue-50 text-blue-800 text-center font-medium border-t border-blue-100 animate-pulse">
                 Saving your new Profile Picture...
               </div>
-            )}
+            )} */}
           </div>
         </div>
       )}
@@ -221,7 +222,8 @@ export default function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {userUploads.map((upload) => (
-              <div
+              <Link
+                href={`/edit-upload/${upload.id}`}
                 key={upload.id}
                 className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col justify-between gap-2 hover:border-blue-300 hover:shadow-sm transition"
               >
@@ -244,7 +246,7 @@ export default function DashboardPage() {
                     day: "numeric",
                   })}
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
