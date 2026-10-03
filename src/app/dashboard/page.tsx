@@ -8,6 +8,8 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [userUploads, setUserUploads] = useState<any[]>([]);
+
   const [isPopUpOpen, setIsPopUpOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -28,16 +30,26 @@ export default function DashboardPage() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", user.id)
         .single();
 
-      if (error) {
-        console.error("Error fetching profile:", error.message);
+      if (profileError) {
+        console.error("Error fetching profile:", profileError.message);
       } else {
-        setProfile(data);
+        setProfile(profileData);
+      }
+
+      const { data: uploadsData, error: uploadsError } = await supabase
+        .from("uploads")
+        .select("*")
+        .eq("uploader_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (!uploadsError && uploadsData) {
+        setUserUploads(uploadsData);
       }
 
       setIsLoading(false);
@@ -196,6 +208,47 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <div className="w-full max-w-4xl bg-white rounded-lg shadow-md p-8 mt-6">
+        <h2 className="text-xl font-bold text-gray-800 border-b pb-4 mb-6">
+          My Uploads
+        </h2>
+
+        {userUploads.length === 0 ? (
+          <div className="bg-grey-50 p-6 rounded-lg border border-gray-200 text-center text-gray-500">
+            You haven't uploaded anything yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {userUploads.map((upload) => (
+              <div
+                key={upload.id}
+                className="bg-gray-50 p-4 rounded-lg border border-gray-200 flex flex-col justify-between gap-2 hover:border-blue-300 hover:shadow-sm transition"
+              >
+                <div>
+                  <h3
+                    className="font-semibold text-gray-800 line-clamp-2"
+                    title={upload.title}
+                  >
+                    {upload.title}
+                  </h3>
+                  <p className="text-xs text-blue-600 mt-1 font-medium">
+                    {upload.course_code}
+                  </p>
+                </div>
+                <div className="text-xs text-gray-500 mt-2 border-t border-gray-200 pt-2">
+                  Uploaded{" "}
+                  {new Date(upload.created_at).toLocaleDateString(undefined, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </main>
   );
 }
