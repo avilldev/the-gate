@@ -84,6 +84,7 @@ export default function UploadPage() {
         throw new Error("Could not retrieve your school information.");
 
       const uploadedFileUrls: string[] = [];
+      const uploadedFileNames: string[] = [];
 
       for (const file of files) {
         const fileExt = file.name.split(".").pop();
@@ -104,6 +105,7 @@ export default function UploadPage() {
         } = supabase.storage.from("resources").getPublicUrl(filePath);
 
         uploadedFileUrls.push(publicUrl);
+        uploadedFileNames.push(file.name);
       }
 
       const { error: dbError } = await supabase.from("uploads").insert({
@@ -120,11 +122,11 @@ export default function UploadPage() {
         class_number: classNumber || null,
         notes: notes || null,
         file_urls: uploadedFileUrls,
+        file_names: uploadedFileNames,
       });
 
       if (dbError) throw new Error(`Database error:${dbError.message}`);
 
-      alert("Success! Your resrouces have been securely uploaded.");
       window.location.href = "/dashboard";
     } catch (error: any) {
       console.error("Upload error:", error);

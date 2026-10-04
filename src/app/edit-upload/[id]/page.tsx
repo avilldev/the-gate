@@ -166,9 +166,14 @@ export default function EditUploadPage() {
             >
               Delete Upload
             </button>
-            <button className="text-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-md font-medium transition">
+            <button
+              type="button"
+              onClick={() => handleNavigation(`/resource/${uploadId}`)}
+              className="text-sm px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded-md font-medium transition"
+            >
               Preview Public Page
             </button>
+
             <button
               type="button"
               onClick={() => handleNavigation("/dashboard")}
